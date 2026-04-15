@@ -1,0 +1,5 @@
+path: D:\Code\1.YOLO\X-AnyLabeling
+train: D:\Code\1.YOLO\X-AnyLabeling\datasets\train_x_20
+val: D:\Code\1.YOLO\X-AnyLabeling\datasets\train_x_20\val
+names:
+  0: zhenjiao

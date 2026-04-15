@@ -1,0 +1,17 @@
+# 【不可随意修改】模型类型，必须和官方适配的类型名完全一致，如yolov5/yolov8/yolov11/rtdetr等
+type: yolov8
+# 模型索引名，可自定义，避免和内置模型重名
+name: my_custom_yolov8-val
+# 界面显示名称，可自定义
+display_name: 我的验证模型-YOLOv8
+# 模型提供方，可自定义
+provider: 自定义训练
+# 【关键】ONNX模型路径，推荐用绝对路径，避免相对路径报错
+model_path: D:\Code\1.YOLO\X-AnyLabeling\examples\test-onnx\weights\best.onnx
+# NMS的IOU阈值，可后续在界面调整
+iou_threshold: 0.45
+# 置信度阈值，验证集建议调低，覆盖更多预测结果
+conf_threshold: 0.25
+# 【关键】类别列表，必须和训练时的类别名称、顺序完全一致，不能错序、漏写
+classes:
+  - zhenjiao
