@@ -1,5 +1,6 @@
-__appname__ = "X-AnyLabeling"
-__appdescription__ = "Advanced Auto Labeling Solution with Added Features"
+__appname__ = "翊燊科技YOLO模型训练与标注平台"
+__appdescription__ = "翊燊科技AI团队出品 | 专注于工业视觉与YOLO模型训练"
+__author__ = "翊燊科技"
 __version__ = "4.0.0-beta.7"
 __url__ = "https://github.com/CVHub520/X-AnyLabeling"
 

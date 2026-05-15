@@ -287,9 +287,11 @@ def main():
 
     logger.setLevel(getattr(logging, logger_level.upper()))
     logger.info(
-        f"🚀 {gradient_text(f'X-AnyLabeling v{__version__} launched!')}"
+        f"🚀 {gradient_text(f'🚀 {__appname__} v{__version__} 启动成功！')}"
     )
-    logger.info(f"⭐ If you like it, give us a star: {__url__}")
+    logger.info(
+        f"💡 翊燊科技AI团队 | 工业视觉解决方案提供商"
+    )
     if qt_platform:
         os.environ["QT_QPA_PLATFORM"] = qt_platform
         logger.info(f"🖥️ Using Qt platform: {qt_platform}")
