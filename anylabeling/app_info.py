@@ -1,6 +1,6 @@
 __appname__ = "X-AnyLabeling"
 __appdescription__ = "Advanced Auto Labeling Solution with Added Features"
-__version__ = "4.0.0-beta.2"
+__version__ = "4.0.0-beta.7"
 __url__ = "https://github.com/CVHub520/X-AnyLabeling"
 
 CLI_HELP_MSG = """
@@ -19,6 +19,7 @@ CLI_HELP_MSG = """
         xanylabeling --output DIR                       Set output directory
         xanylabeling --config FILE                      Use custom config file
         xanylabeling --reset-config                     Reset Qt config
+        xanylabeling --qt-image-allocation-limit 1024  Set Qt image allocation limit to 1024 MB
 
     Conversion Tasks:
         xanylabeling convert                            List all conversion tasks

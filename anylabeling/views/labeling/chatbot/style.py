@@ -70,7 +70,7 @@ class CustomTooltip(QWidget):
                 background-color: transparent;
             }}
             #tooltip_container {{
-                background-color: {background_color}; 
+                background-color: {background_color};
                 border-radius: 16px;
                 border: 1px solid rgba(0, 0, 0, 0.1);
             }}
@@ -365,6 +365,8 @@ class ChatbotDialogStyle:
             QPushButton {{
                 border: none;
                 background: transparent;
+                padding: 0px;
+                margin: 0px;
             }}
             QPushButton:hover {{
                 background-color: {theme["background_secondary"]};

@@ -60,6 +60,7 @@ class ModelManager(QObject):
         self.model_download_thread = None
         self.model_execution_thread = None
         self.model_execution_thread_lock = Lock()
+        self.model_execution_worker = None
         self._cancel_event = Event()
 
         self.load_model_configs()
@@ -188,7 +189,7 @@ class ModelManager(QObject):
         config_file = os.path.normpath(os.path.abspath(config_file))
         if (
             self.model_download_thread is not None
-            and self.model_download_thread.isRunning()
+            and self.is_model_download_running()
         ):
             logger.info(
                 "Another model is being loaded. Please wait for it to finish."
@@ -291,10 +292,7 @@ class ModelManager(QObject):
 
     def load_model(self, config_file):
         """Run model loading in a thread"""
-        if (
-            self.model_download_thread is not None
-            and self.model_download_thread.isRunning()
-        ):
+        if self.is_model_download_running():
             logger.info(
                 "Another model is being loaded. Please wait for it to finish."
             )
@@ -343,17 +341,44 @@ class ModelManager(QObject):
         self.model_download_worker.finished.connect(
             self.model_download_thread.quit
         )
+        self.model_download_thread.finished.connect(
+            self.on_model_download_thread_finished
+        )
+        self.model_download_thread.finished.connect(
+            self.model_download_thread.deleteLater
+        )
         self.model_download_worker.moveToThread(self.model_download_thread)
         self.model_download_thread.started.connect(
             self.model_download_worker.run
         )
         self.model_download_thread.start()
 
+    def is_model_download_running(self):
+        """Return whether the model download thread is still running."""
+        try:
+            return (
+                self.model_download_thread is not None
+                and self.model_download_thread.isRunning()
+            )
+        except RuntimeError:
+            self.model_download_thread = None
+            self.model_download_worker = None
+            return False
+
+    @pyqtSlot()
+    def on_model_download_thread_finished(self):
+        """Clear finished model download thread references."""
+        self.model_download_thread = None
+        self.model_download_worker = None
+
     def _load_model(self, model_id):  # noqa: C901
         """Load and return model info"""
-        if self.loaded_model_config is not None:
-            self.loaded_model_config["model"].unload()
-            self.loaded_model_config = None
+        with self.loaded_model_config_lock:
+            old_config = self.loaded_model_config
+            if old_config is not None:
+                self.loaded_model_config = None
+        if old_config is not None:
+            old_config["model"].unload()
             self.auto_segmentation_model_unselected.emit()
 
         model_config = copy.deepcopy(self.model_configs[model_id])
@@ -448,6 +473,46 @@ class ModelManager(QObject):
 
             try:
                 model_config["model"] = YOLOv8_SAHI(
+                    model_config, on_message=self.new_model_status.emit
+                )
+                self.auto_segmentation_model_unselected.emit()
+                logger.info(
+                    f"✅ Model loaded successfully: {model_config['type']}"
+                )
+            except Exception as e:  # noqa
+                template = "Error in loading model: {error_message}"
+                translated_template = self.tr(template)
+                error_text = translated_template.format(error_message=str(e))
+                self.new_model_status.emit(error_text)
+                logger.error(
+                    f"❌ Error in loading model: {model_config['type']} with error: {str(e)}"
+                )
+                return
+        elif model_config["type"] == "yolo26_sahi":
+            from .yolo26_sahi import YOLO26_SAHI
+
+            try:
+                model_config["model"] = YOLO26_SAHI(
+                    model_config, on_message=self.new_model_status.emit
+                )
+                self.auto_segmentation_model_unselected.emit()
+                logger.info(
+                    f"✅ Model loaded successfully: {model_config['type']}"
+                )
+            except Exception as e:  # noqa
+                template = "Error in loading model: {error_message}"
+                translated_template = self.tr(template)
+                error_text = translated_template.format(error_message=str(e))
+                self.new_model_status.emit(error_text)
+                logger.error(
+                    f"❌ Error in loading model: {model_config['type']} with error: {str(e)}"
+                )
+                return
+        elif model_config["type"] == "yolo11_sahi":
+            from .yolo11_sahi import YOLO11_SAHI
+
+            try:
+                model_config["model"] = YOLO11_SAHI(
                     model_config, on_message=self.new_model_status.emit
                 )
                 self.auto_segmentation_model_unselected.emit()
@@ -1117,6 +1182,27 @@ class ModelManager(QObject):
                 return
             # Request next files for prediction
             self.request_next_files_requested.emit()
+        elif model_config["type"] == "segment_anything_3":
+            from .segment_anything_3 import SegmentAnything3
+
+            try:
+                model_config["model"] = SegmentAnything3(
+                    model_config, on_message=self.new_model_status.emit
+                )
+                self.auto_segmentation_model_selected.emit()
+                logger.info(
+                    f"✅ Model loaded successfully: {model_config['type']}"
+                )
+            except Exception as e:  # noqa
+                logger.error(
+                    f"❌ Error in loading model: {model_config['type']} "
+                    f"with error: {str(e)}"
+                )
+                template = "Error in loading model: {error_message}"
+                translated_template = self.tr(template)
+                error_text = translated_template.format(error_message=str(e))
+                self.new_model_status.emit(error_text)
+                return
         elif model_config["type"] == "segment_anything_2_video":
             try:
                 from .segment_anything_2_video import SegmentAnything2Video
@@ -2049,8 +2135,9 @@ class ModelManager(QObject):
         else:
             raise Exception(f"Unknown model type: {model_config['type']}")
 
-        self.loaded_model_config = model_config
-        return self.loaded_model_config
+        with self.loaded_model_config_lock:
+            self.loaded_model_config = model_config
+        return model_config
 
     def set_cache_auto_label(self, text, gid):
         """Set cache auto label"""
@@ -2160,7 +2247,9 @@ class ModelManager(QObject):
         NOTE: This function is blocking. The model can take a long time to
         predict. So it is recommended to use predict_shapes_threading instead.
         """
-        if self.loaded_model_config is None:
+        with self.loaded_model_config_lock:
+            model_config = self.loaded_model_config
+        if model_config is None:
             self.new_model_status.emit(
                 self.tr("Model is not loaded. Choose a mode to continue.")
             )
@@ -2169,23 +2258,21 @@ class ModelManager(QObject):
 
         try:
             if text_prompt is not None:
-                auto_labeling_result = self.loaded_model_config[
-                    "model"
-                ].predict_shapes(image, filename, text_prompt=text_prompt)
+                auto_labeling_result = model_config["model"].predict_shapes(
+                    image, filename, text_prompt=text_prompt
+                )
             elif run_tracker is True:
-                auto_labeling_result = self.loaded_model_config[
-                    "model"
-                ].predict_shapes(image, filename, run_tracker=run_tracker)
+                auto_labeling_result = model_config["model"].predict_shapes(
+                    image, filename, run_tracker=run_tracker
+                )
             elif existing_shapes is not None:
-                auto_labeling_result = self.loaded_model_config[
-                    "model"
-                ].predict_shapes(
+                auto_labeling_result = model_config["model"].predict_shapes(
                     image, filename, existing_shapes=existing_shapes
                 )
             else:
-                auto_labeling_result = self.loaded_model_config[
-                    "model"
-                ].predict_shapes(image, filename)
+                auto_labeling_result = model_config["model"].predict_shapes(
+                    image, filename
+                )
 
             if isinstance(auto_labeling_result, AutoLabelingResult):
                 auto_labeling_result.image_path = filename
@@ -2219,7 +2306,9 @@ class ModelManager(QObject):
         """Predict shapes.
         This function starts a thread to run the prediction.
         """
-        if self.loaded_model_config is None:
+        with self.loaded_model_config_lock:
+            _config_snapshot = self.loaded_model_config
+        if _config_snapshot is None:
             self.new_model_status.emit(
                 self.tr("Model is not loaded. Choose a mode to continue.")
             )
@@ -2230,10 +2319,17 @@ class ModelManager(QObject):
         self.prediction_started.emit()
 
         with self.model_execution_thread_lock:
-            if (
-                self.model_execution_thread is not None
-                and self.model_execution_thread.isRunning()
-            ):
+            try:
+                execution_running = (
+                    self.model_execution_thread is not None
+                    and self.model_execution_thread.isRunning()
+                )
+            except RuntimeError:
+                self.model_execution_thread = None
+                self.model_execution_worker = None
+                execution_running = False
+
+            if execution_running:
                 self.new_model_status.emit(
                     self.tr(
                         "Another model is being executed."
@@ -2272,6 +2368,12 @@ class ModelManager(QObject):
             self.model_execution_worker.finished.connect(
                 self.model_execution_thread.quit
             )
+            self.model_execution_thread.finished.connect(
+                self.on_model_execution_finished
+            )
+            self.model_execution_thread.finished.connect(
+                self.model_execution_thread.deleteLater
+            )
             self.model_execution_worker.moveToThread(
                 self.model_execution_thread
             )
@@ -2279,6 +2381,13 @@ class ModelManager(QObject):
                 self.model_execution_worker.run
             )
             self.model_execution_thread.start()
+
+    @pyqtSlot()
+    def on_model_execution_finished(self):
+        """Clear finished model execution thread references."""
+        with self.model_execution_thread_lock:
+            self.model_execution_thread = None
+            self.model_execution_worker = None
 
     def on_next_files_changed(self, next_files):
         """Run prediction on next files in advance to save inference time later"""

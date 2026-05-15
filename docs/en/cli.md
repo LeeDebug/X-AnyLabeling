@@ -43,6 +43,9 @@ xanylabeling --logger-level debug
 
 # Disable automatic update check
 xanylabeling --no-auto-update-check
+
+# Raise Qt image allocation limit to 1024 MB
+xanylabeling --qt-image-allocation-limit 1024
 ```
 
 ## 2. System Commands
@@ -58,9 +61,9 @@ xanylabeling --help
 - Output
 
 ```bash
-usage: xanylabeling [-h] [--reset-config] [--logger-level {debug,info,warning,fatal,error}] [--no-auto-update-check] [--qt-platform QT_PLATFORM] [--filename [FILENAME]] [--output OUTPUT]
+usage: xanylabeling [-h] [--reset-config] [--logger-level {debug,info,warning,fatal,error}] [--no-auto-update-check] [--qt-platform QT_PLATFORM]
+                    [--qt-image-allocation-limit QT_IMAGE_ALLOCATION_LIMIT] [--filename [FILENAME]] [--output OUTPUT]
                     [--config CONFIG] [--nodata] [--autosave] [--nosortlabels] [--flags FLAGS] [--labelflags LABEL_FLAGS] [--labels LABELS] [--validatelabel {exact}] [--keep-prev]
-                    [--epsilon EPSILON]
                     {help,checks,version,config,convert} ...
 
 positional arguments:
@@ -81,6 +84,8 @@ options:
                         disable automatic update check on startup
   --qt-platform QT_PLATFORM
                         Force Qt platform plugin (e.g., 'xcb', 'wayland'). If not specified, Qt will auto-detect the platform.
+  --qt-image-allocation-limit QT_IMAGE_ALLOCATION_LIMIT
+                        Override Qt image allocation limit in MB. Qt default is 256 MB. Use 0 to disable the limit.
   --filename [FILENAME]
                         image or label filename; If a directory path is passed in, the folder will be loaded automatically
   --output OUTPUT, -O OUTPUT, -o OUTPUT
@@ -97,7 +102,6 @@ options:
   --validatelabel {exact}
                         label validation types
   --keep-prev           keep annotation of previous frame
-  --epsilon EPSILON     epsilon to find nearest vertex on canvas
 ```
 
 ### 2.2 Display System and Package Information
@@ -126,7 +130,7 @@ System
   Disk:              841.6/1006.9 GB
   GPU:               CUDA:0 (NVIDIA GeForce RTX 3060, 12288MiB)
   CUDA:              V11.6.124
-  Python Version:    3.10.10
+  Python Version:    3.12.10
 ────────────────────────────────────────────────────────────
 Packages
 ────────────────────────────────────────────────────────────

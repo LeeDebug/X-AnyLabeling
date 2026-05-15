@@ -1,3 +1,4 @@
+import ast
 import os
 import re
 import json
@@ -22,11 +23,12 @@ from anylabeling.views.labeling.utils.style import (
     get_cancel_btn_style,
     get_dialog_style,
     get_ok_btn_style,
+    get_settings_combo_style,
     get_spinbox_style,
     get_table_item_bg_color,
     get_table_item_disabled_bg_color,
 )
-from anylabeling.views.labeling.utils.theme import get_mode, get_theme
+from anylabeling.views.labeling.utils.theme import get_theme
 
 # TODO(unknown):
 # - Calculate optimal position so as not to go out of screen area.
@@ -39,72 +41,26 @@ def natural_sort_key(s):
 
 
 class ColoredComboBox(QtWidgets.QComboBox):
-    LIGHT_COLORS = {
-        "polygon": "#D81B60",
-        "rectangle": "#1E88E5",
-        "rotation": "#8E24AA",
-        "quadrilateral": "#7B1FA2",
-        "circle": "#2E7D32",
-        "line": "#E65100",
-        "point": "#00838F",
-        "linestrip": "#6D4C41",
-    }
-    DARK_COLORS = {
-        "polygon": "#F06292",
-        "rectangle": "#64B5F6",
-        "rotation": "#CE93D8",
-        "quadrilateral": "#BA68C8",
-        "circle": "#81C784",
-        "line": "#FFB74D",
-        "point": "#4DD0E1",
-        "linestrip": "#BCAAA4",
-    }
-
     def __init__(self, parent=None):
         super(ColoredComboBox, self).__init__(parent)
-        palette = (
-            self.DARK_COLORS if get_mode() == "dark" else self.LIGHT_COLORS
-        )
-        self.mode_colors = {k: QtGui.QColor(v) for k, v in palette.items()}
+        t = get_theme()
+        self.setStyleSheet(get_settings_combo_style() + f"""
+            QComboBox {{
+                background-color: {t["background_secondary"]};
+                border: 1px solid {t["border"]};
+                border-radius: 6px;
+            }}
+            QComboBox:hover {{
+                background-color: {t["background_secondary"]};
+                border-color: {t["border_light"]};
+            }}
+            """)
 
     def addModeItem(self, text, userData=None):
         self.addItem(text, userData)
-        if text in self.mode_colors:
-            index = self.count() - 1
-            self.setItemData(
-                index,
-                self.mode_colors[text],
-                QtCore.Qt.ItemDataRole.ForegroundRole,
-            )
 
-    def paintEvent(self, event):
-        painter = QtWidgets.QStylePainter(self)
-        painter.setPen(self.palette().color(QtGui.QPalette.ColorRole.Text))
-
-        # Draw the combobox frame, button, etc.
-        opt = QtWidgets.QStyleOptionComboBox()
-        self.initStyleOption(opt)
-        painter.drawComplexControl(
-            QtWidgets.QStyle.ComplexControl.CC_ComboBox, opt
-        )
-
-        # Draw the current text with proper color
-        current_text = self.currentText()
-        if current_text in self.mode_colors:
-            painter.setPen(self.mode_colors[current_text])
-
-        # Draw the text
-        opt.currentText = current_text
-        rect = self.style().subElementRect(
-            QtWidgets.QStyle.SubElement.SE_ComboBoxFocusRect, opt, self
-        )
-        rect.adjust(2, 0, -2, 0)  # adjust the text rectangle
-        painter.drawText(
-            rect,
-            QtCore.Qt.AlignmentFlag.AlignLeft
-            | QtCore.Qt.AlignmentFlag.AlignVCenter,
-            current_text,
-        )
+    def wheelEvent(self, event):
+        event.ignore()
 
 
 class DigitShortcutDialog(QtWidgets.QDialog):
@@ -701,7 +657,6 @@ class GroupIDModifyDialog(QtWidgets.QDialog):
         if self.modify_group_id(
             updated_gid_info, deleted_gid_info, start_index, end_index
         ):
-
             # Update original gid info
             self.gid_info = new_gid_info
 
@@ -1329,14 +1284,61 @@ class LabelDialog(QtWidgets.QDialog):
         self._fit_to_content = fit_to_content
 
         super(LabelDialog, self).__init__(parent)
+        self.setObjectName("LabelDialog")
+        t = get_theme()
+        self.setStyleSheet(f"""
+            QDialog#LabelDialog QLineEdit,
+            QDialog#LabelDialog QTextEdit {{
+                background-color: {t["background_secondary"]};
+                color: {t["text"]};
+                border: 1px solid {t["border"]};
+                border-radius: 0px;
+                margin: 0px;
+                selection-background-color: {t["selection"]};
+            }}
+            QDialog#LabelDialog QLineEdit {{
+                padding: 2px 4px;
+            }}
+            QDialog#LabelDialog QTextEdit {{
+                padding: 4px;
+            }}
+            QDialog#LabelDialog QLineEdit:hover,
+            QDialog#LabelDialog QTextEdit:hover {{
+                border-color: {t["border_light"]};
+            }}
+            QDialog#LabelDialog QLineEdit:focus,
+            QDialog#LabelDialog QTextEdit:focus {{
+                border: 1px solid {t["highlight"]};
+            }}
+            QDialog#LabelDialog QPushButton {{
+                background-color: {t["surface"]};
+                color: {t["text"]};
+                border: 1px solid {t["border"]};
+                border-radius: 0px;
+                margin: 0px;
+                min-width: 72px;
+                min-height: 22px;
+                max-height: 22px;
+                padding: 0 8px;
+            }}
+            QDialog#LabelDialog QPushButton:hover {{
+                background-color: {t["surface_hover"]};
+            }}
+            QDialog#LabelDialog QPushButton:pressed {{
+                background-color: {t["surface_pressed"]};
+            }}
+        """)
+        control_height = 24
         self.edit = LabelQLineEdit()
         self.edit.setPlaceholderText(text)
+        self.edit.setFixedHeight(control_height)
         self.edit.setValidator(utils.label_validator())
         self.edit.editingFinished.connect(self.postprocess)
         if flags:
             self.edit.textChanged.connect(self.update_flags)
         self.edit_group_id = QtWidgets.QLineEdit()
         self.edit_group_id.setPlaceholderText(self.tr("Group ID"))
+        self.edit_group_id.setFixedHeight(control_height)
         self.edit_group_id.setValidator(
             QtGui.QRegularExpressionValidator(
                 QtCore.QRegularExpression(r"\d*"), None
@@ -1353,6 +1355,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.linking_input.setPlaceholderText(
             self.tr("Enter linking, e.g., [0,1]")
         )
+        self.linking_input.setFixedHeight(control_height)
         linking_font = (
             self.linking_input.font()
         )  # Adjust placeholder font size
@@ -1365,18 +1368,21 @@ class LabelDialog(QtWidgets.QDialog):
             row_height * 4 + 2 * self.linking_list.frameWidth()
         )
         self.add_linking_button = QtWidgets.QPushButton(self.tr("Add"))
+        self.add_linking_button.setFixedHeight(control_height)
         self.add_linking_button.clicked.connect(self.add_linking_pair)
 
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)
         if show_text_field:
             layout_edit = QtWidgets.QHBoxLayout()
+            layout_edit.setSpacing(6)
             layout_edit.addWidget(self.edit, 4)
             layout_edit.addWidget(self.edit_group_id, 2)
             layout.addLayout(layout_edit)
 
         # Add linking layout
         layout_linking = QtWidgets.QHBoxLayout()
+        layout_linking.setSpacing(6)
         layout_linking.addWidget(self.linking_input, 4)
         layout_linking.addWidget(self.add_linking_button, 2)
         layout.addLayout(layout_linking)
@@ -1391,6 +1397,8 @@ class LabelDialog(QtWidgets.QDialog):
         )
         bb.button(bb.StandardButton.Ok).setIcon(utils.new_icon("done"))
         bb.button(bb.StandardButton.Cancel).setIcon(utils.new_icon("undo"))
+        bb.button(bb.StandardButton.Ok).setFixedHeight(control_height)
+        bb.button(bb.StandardButton.Cancel).setFixedHeight(control_height)
         bb.accepted.connect(self.validate)
         bb.rejected.connect(self.reject)
 
@@ -1462,7 +1470,7 @@ class LabelDialog(QtWidgets.QDialog):
     def add_linking_pair(self):
         linking_text = self.linking_input.text()
         try:
-            linking_pairs = eval(linking_text)
+            linking_pairs = ast.literal_eval(linking_text)
             if (
                 isinstance(linking_pairs, list)
                 and len(linking_pairs) == 2
@@ -1506,7 +1514,9 @@ class LabelDialog(QtWidgets.QDialog):
         self.linking_list.takeItem(self.linking_list.row(list_item))
         item_widget.deleteLater()
 
-    def reset_linking(self, kie_linking=[]):
+    def reset_linking(self, kie_linking=None):
+        if kie_linking is None:
+            kie_linking = []
         self.linking_list.clear()
         for linking_pair in kie_linking:
             self.linking_list.addItem(str(linking_pair))
@@ -1656,8 +1666,10 @@ class LabelDialog(QtWidgets.QDialog):
         group_id=None,
         description=None,
         difficult=False,
-        kie_linking=[],
+        kie_linking=None,
     ):
+        if kie_linking is None:
+            kie_linking = []
         if self._fit_to_content["row"]:
             self.label_list.setMinimumHeight(
                 self.label_list.sizeHintForRow(0) * self.label_list.count() + 2

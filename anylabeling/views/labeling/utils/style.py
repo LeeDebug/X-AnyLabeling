@@ -1,7 +1,7 @@
 from anylabeling.views.labeling.utils.qt import new_icon_path
 from anylabeling.views.labeling.utils.theme import (
-    get_theme,
     get_mode,
+    get_theme,
     _checkbox_indicator_qss,
 )
 from PyQt6.QtGui import QColor
@@ -207,6 +207,174 @@ def get_normal_button_style():
     """
 
 
+def get_settings_button_style():
+    t = get_theme()
+    return f"""
+        QPushButton {{
+            border: 1px solid {t["border"]};
+            border-radius: 8px;
+            background: {t["background_secondary"]};
+            padding: 0;
+        }}
+        QPushButton:hover {{
+            background: {t["surface_hover"]};
+        }}
+        QPushButton:pressed {{
+            background: {t["surface_pressed"]};
+        }}
+    """
+
+
+def get_toolbar_scroll_area_style():
+    t = get_theme()
+    return f"""
+        QScrollArea {{
+            border: none;
+            background-color: transparent;
+        }}
+        QScrollBar:vertical {{
+            background-color: transparent;
+            width: 6px;
+            margin: 2px 0;
+        }}
+        QScrollBar::handle:vertical {{
+            background-color: {t["scrollbar"]};
+            border-radius: 3px;
+            min-height: 20px;
+        }}
+        QScrollBar::handle:vertical:hover {{
+            background-color: {t["scrollbar_hover"]};
+        }}
+        QScrollBar::add-line:vertical,
+        QScrollBar::sub-line:vertical {{
+            height: 0;
+            width: 0;
+            border: none;
+            background-color: transparent;
+        }}
+        QScrollBar::up-arrow:vertical,
+        QScrollBar::down-arrow:vertical {{
+            width: 0;
+            height: 0;
+            image: none;
+        }}
+        QScrollBar::add-page:vertical,
+        QScrollBar::sub-page:vertical {{
+            background-color: transparent;
+        }}
+    """
+
+
+def get_settings_combo_style() -> str:
+    down_arrow = new_icon_path("caret-down", "svg")
+    if get_mode() == "dark":
+        right_bg = (24, 24, 24)
+        card_bg = (44, 44, 46)
+        title_text = (245, 245, 247)
+        line = (72, 72, 74)
+        left_selected = (72, 72, 74)
+    else:
+        right_bg = (239, 238, 239)
+        card_bg = (234, 234, 235)
+        title_text = (0, 0, 0)
+        line = (228, 228, 231)
+        left_selected = (212, 212, 216)
+
+    def _rgb(rgb):
+        return f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})"
+
+    return f"""
+        QComboBox {{
+            combobox-popup: 0;
+            background-color: {_rgb(right_bg)};
+            color: {_rgb(title_text)};
+            border: 1px solid {_rgb(line)};
+            border-radius: 0px;
+            padding: 0 8px;
+            min-height: 30px;
+        }}
+        QComboBox:hover {{
+            background-color: {_rgb(card_bg)};
+        }}
+        QComboBox::drop-down {{
+            border: none;
+            width: 20px;
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+        }}
+        QComboBox::down-arrow {{
+            image: url({down_arrow});
+            width: 12px;
+            height: 12px;
+        }}
+        QComboBox QAbstractItemView {{
+            background-color: {_rgb(right_bg)};
+            color: {_rgb(title_text)};
+            border: 1px solid {_rgb(line)};
+            border-radius: 0px;
+            margin: 0px;
+            padding: 0px;
+            selection-background-color: {_rgb(left_selected)};
+            selection-color: {_rgb(title_text)};
+            outline: none;
+        }}
+        QComboBox QAbstractItemView::item {{
+            background-color: {_rgb(right_bg)};
+            min-height: 24px;
+            padding: 2px 8px;
+            border-radius: 0px;
+            border-bottom: 1px solid {_rgb(line)};
+        }}
+        QComboBox QAbstractItemView::item:hover {{
+            background-color: {_rgb(card_bg)};
+        }}
+        QComboBox QAbstractItemView::item:selected {{
+            background-color: {_rgb(left_selected)};
+            color: {_rgb(title_text)};
+        }}
+    """
+
+
+def get_model_selection_scroll_area_style():
+    return """
+        QScrollArea#model_selection_scroll_area {
+            background: transparent;
+            border: none;
+        }
+        QScrollArea#model_selection_scroll_area QScrollBar:horizontal {
+            background: transparent;
+            height: 16px;
+            margin: 2px 12px 2px 12px;
+            border: none;
+        }
+        QScrollArea#model_selection_scroll_area QScrollBar::handle:horizontal {
+            background: rgb(206, 213, 230);
+            min-width: 34px;
+            border-radius: 4px;
+        }
+        QScrollArea#model_selection_scroll_area QScrollBar::add-line:horizontal {
+            background: transparent;
+            border: none;
+            subcontrol-origin: margin;
+            subcontrol-position: right;
+            width: 12px;
+            image: url(:/images/images/caret-right.svg);
+        }
+        QScrollArea#model_selection_scroll_area QScrollBar::sub-line:horizontal {
+            background: transparent;
+            border: none;
+            subcontrol-origin: margin;
+            subcontrol-position: left;
+            width: 12px;
+            image: url(:/images/images/caret-left.svg);
+        }
+        QScrollArea#model_selection_scroll_area QScrollBar::add-page:horizontal,
+        QScrollArea#model_selection_scroll_area QScrollBar::sub-page:horizontal {
+            background: transparent;
+        }
+    """
+
+
 def get_toggle_button_style(button_color: str):
     t = get_theme()
     return f"""
@@ -319,6 +487,14 @@ def get_dock_style() -> str:
         str: QSS stylesheet string covering dock widget and common children.
     """
     t = get_theme()
+    if get_mode() == "dark":
+        file_checked_bg = t["primary"]
+        file_checked_border = t["primary"]
+        file_checkmark = ":/images/images/checkmark-white.svg"
+    else:
+        file_checked_bg = "#ffffff"
+        file_checked_border = t["border_light"]
+        file_checkmark = ":/images/images/checkmark.svg"
     return f"""
         QDockWidget {{
             color: {t["text"]};
@@ -346,10 +522,14 @@ def get_dock_style() -> str:
             background-color: {t["selection"]};
             color: {t["selection_text"]};
         }}
-        QListWidget::item:hover {{
+        QListWidget::item:hover:!selected {{
             background-color: {t["surface_hover"]};
         }}
-        QListWidget::indicator {{
+        QListWidget#FileList::item {{
+            padding: 1px 0;
+            min-height: 18px;
+        }}
+        QListWidget#FileList::indicator {{
             width: 14px;
             height: 14px;
             border-radius: 3px;
@@ -358,10 +538,13 @@ def get_dock_style() -> str:
             margin-left: 2px;
             margin-right: 4px;
         }}
-        QListWidget::indicator:checked {{
-            background-color: {t["primary"]};
-            border-color: {t["primary"]};
-            image: url(:/images/images/checkmark-white.svg);
+        QListWidget#FileList::indicator:hover {{
+            border-color: {t["border"]};
+        }}
+        QListWidget#FileList::indicator:checked {{
+            background-color: {file_checked_bg};
+            border: 1px solid {file_checked_border};
+            image: url({file_checkmark});
         }}
         QLineEdit {{
             background-color: {t["background_secondary"]};
@@ -393,6 +576,22 @@ def get_dock_style() -> str:
         }}
         QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
             height: 0;
+        }}
+        QScrollBar:horizontal {{
+            background-color: {t["background_secondary"]};
+            height: 8px;
+            margin: 0;
+        }}
+        QScrollBar::handle:horizontal {{
+            background-color: {t["scrollbar"]};
+            border-radius: 4px;
+            min-width: 20px;
+        }}
+        QScrollBar::handle:horizontal:hover {{
+            background-color: {t["scrollbar_hover"]};
+        }}
+        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+            width: 0;
         }}
         QCheckBox {{
             color: {t["text"]};

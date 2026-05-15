@@ -1,5 +1,155 @@
 # X-AnyLabeling Changelog
 
+## `v4.0.0-beta.7` (May 14, 2026)
+
+### 🐛 Bug Fixes
+
+- Guard stale selections during shape deletion to prevent canvas crashes. (#1369)
+- Prevent annotation visualization popup crashes when no image is loaded.
+- Keep the left toolbar frame full height without stretching toolbar icons.
+
+### 🛠️ Improvements
+
+- Align label dialog controls, shortcut hints, and input states across light and dark themes.
+- Soften digit shortcut combo hover styling for better visual consistency.
+
+### 🌟 Contributors
+
+A total of 1 developer contributed to this release.
+
+Thank @CVHub520
+
+## `v4.0.0-beta.6` (May 13, 2026)
+
+### 🚀 New Features
+
+- Add a confirmation step before starting PaddleOCR parsing and update the PaddleOCR documentation to match the confirmed import workflow.
+
+### 🐛 Bug Fixes
+
+- Add horizontal scrolling for overflowing auto-labeling toolbar controls. (#1360)
+- Export overview CSV files with UTF-8 BOM to prevent garbled filenames in spreadsheet applications. (#1359)
+
+### 🛠️ Improvements
+
+- Polish PaddleOCR dark mode across block editors, preview canvas, result action icons, table editing, and LaTeX preview rendering.
+- Align sidebar, file list, shape dialog, and Ultralytics training dialog scroll styling with the current application theme.
+
+### 🌟 Contributors
+
+A total of 1 developer contributed to this release.
+
+Thank @CVHub520
+
+## `v4.0.0-beta.5` (Apr 26, 2026)
+
+### 🚀 New Features
+
+- Add client-side SAM 3 ONNX support for text-grounded segmentation. (#1232)
+- Add HEIC and HEIF image loading support.
+- Add configurable Qt image allocation limit via `--qt-image-allocation-limit` flag.
+
+### 🐛 Bug Fixes
+
+- Replace `eval` with `ast.literal_eval` in label dialog to prevent arbitrary code injection.
+- Scope SSL verification bypass to model downloads only to avoid unintended side effects.
+- Avoid shared mutable defaults in shape and label dialogs.
+- Guard `loaded_model_config` reads and writes with a lock to prevent race condition.
+- Connect QThread `finished` to `deleteLater` in model manager to prevent use-after-free.
+- Load an independent config copy in `fetch_models_async` to eliminate shared-dict race with main thread.
+- Move non-video batch inference loop to QThread to prevent UI freeze.
+- Call `quit()` on `pre_inference_thread` in GroundingSAM2 unload to actually stop the thread.
+- Disconnect `scan_finished` signal before EXIF cleanup to prevent a stale signal from killing a new scan.
+- Launch Ultralytics training via a stable worker subprocess. (#1354)
+- Return `(None, None)` from `imread_unicode` when `imdecode` fails on corrupt images.
+- Guard VOC XML `size` and object `name` element lookups against missing elements.
+- Correct "diccicult" typo to "difficult" in MOT export shape lookup.
+- Guard all `classes.index` calls against unknown labels to prevent `ValueError`.
+- Unpack shape in canvas label-text loop to fix stale variable reference in `paintEvent`.
+- Guard `shapes_backups` access in `mouseReleaseEvent` against empty list and out-of-range index.
+- Guard `scale_fit_window` and `scale_fit_width` against zero pixmap or widget dimensions.
+- Replace `textChanged` disconnect/connect with `QSignalBlocker` to prevent `TypeError` on first load.
+- Raise on download failure in `get_model_abs_path` instead of silently returning `None`.
+- Remove always-false membership loop in provider config handling.
+- Clear stale PPOCR output files before each export run to prevent data accumulation.
+- Log unhandled settings keys instead of silently ignoring them.
+- Log skipped files in async EXIF scan instead of silently swallowing exceptions.
+- Correct remote server debug log to use `current_model_id` and fix `parameters` typo.
+
+### 🛠️ Improvements
+
+- Speed up canvas `fill_drawing` path by replacing `deepcopy` with a shallow copy.
+- Avoid redundant base64 decode-encode round-trip in `LabelFile.load`.
+- Speed up temporary video handling by using `shutil.copy2` instead of a full in-memory read.
+- Add GeCo2 counting example and usage documentation. (#1293)
+- Add troubleshooting tip for SOCKS proxy error in the Chatbot FAQ.
+- Harden PyInstaller executable build script and normalize repository line endings.
+
+### 🌟 Contributors
+
+A total of 2 developers contributed to this release.
+
+Thank @CVHub520, @fhong-jpg
+
+## `v4.0.0-beta.4` (Apr 21, 2026)
+
+### 🚀 New Features
+
+- Add PaddleOCR document parsing workspace with an official API client mode and asynchronous API job parsing.
+- Add TensorRT inference backend support for auto-labeling. (#1343)
+- Add annotation check status workflow for labeling quality review. (#1340)
+- Add option to train Ultralytics models with checked files only. (#1340)
+- Add annotation visualization export for images and videos.
+- Add YOLO11 and YOLO26 SAHI support for auto-labeling. (#1321)
+- Add file list copy actions and a recent menu action for reopening the last directory. (#1338,#1346)
+- Add Japanese UI localization support and Japanese language selection in the labeling widget. (#1331,#1332)
+
+### 🐛 Bug Fixes
+
+- Keep standard models visible in the remote server model dropdown.
+- Support custom PPOCR recognition dictionaries in auto-labeling. (#1344)
+- Preserve LaTeX arrow commands in PaddleOCR formula previews.
+- Keep the PaddleOCR export dialog open when canceling on macOS.
+- Prevent PyQt6 attribute panel crashes in the label widget. (#1337)
+- Preserve provided image filenames when VOC filenames lack extensions. (#1334)
+- Force zlib resource compression for Windows translation loading. (#1332)
+
+### 🛠️ Improvements
+
+- Package macOS PyInstaller release archives with checksums. (#1285)
+- Align rotated-box documentation and optimize keyboard rotation repaint behavior. (#1333)
+- Update setup guides to install beta pre-release packages by default with quoted optional dependency extras for zsh compatibility.
+- Add repository line-ending attributes to keep source, docs, and config files on LF while preserving CRLF for Windows scripts.
+
+### 🌟 Contributors
+
+A total of 3 developers contributed to this release.
+
+Thank @CVHub520, @kame3mikan3, @tribf
+
+## `v4.0.0-beta.3` (Mar 27, 2026)
+
+### 🚀 New Features
+
+- Add a unified settings panel for centralized application configuration. (#1226)
+- Add 3D cuboid shape annotation generated from rectangles. (#162)
+
+### 🐛 Bug Fixes
+
+- Prevent crashes when triggering auto-labeling shortcuts with no model loaded.
+- Resolve `uv sync` extra conflicts and align supported Python versions. (#1325)
+
+### 🛠️ Improvements
+
+- Batch shape visibility updates and disable visibility toggles while filters are active.
+- Clarify model re-download troubleshooting in the Chinese FAQ. (#1328)
+
+### 🌟 Contributors
+
+A total of 1 developer contributed to this release.
+
+Thank @CVHub520
+
 ## `v4.0.0-beta.2` (Mar 06, 2026)
 
 ### 🚀 New Features

@@ -387,6 +387,8 @@ class LabelConverter:
         """Read an image with support for Unicode paths on all platforms."""
         data = np.fromfile(path, dtype=np.uint8)
         image = cv2.imdecode(data, flags)
+        if image is None:
+            return None, None
 
         height, width = image.shape[:2]
         return image, (width, height)
@@ -661,19 +663,33 @@ class LabelConverter:
         tree = ET.parse(input_file)
         root = tree.getroot()
 
-        image_width = int(root.find("size/width").text)
-        image_height = int(root.find("size/height").text)
+        size_width = root.find("size/width")
+        size_height = root.find("size/height")
+        if size_width is None or size_height is None:
+            raise ValueError(
+                f"Missing <size> element in VOC XML: {input_file}"
+            )
+        image_width = int(size_width.text)
+        image_height = int(size_height.text)
 
         filename_elem = root.find("filename")
         if filename_elem is not None and filename_elem.text:
-            image_filename = filename_elem.text
+            xml_image_filename = filename_elem.text
+            if (
+                osp.splitext(osp.basename(xml_image_filename))[1]
+                or not image_filename
+            ):
+                image_filename = xml_image_filename
 
         self.custom_data["imagePath"] = image_filename
         self.custom_data["imageHeight"] = image_height
         self.custom_data["imageWidth"] = image_width
 
         for obj in root.findall("object"):
-            label = obj.find("name").text
+            name_elem = obj.find("name")
+            if name_elem is None:
+                continue
+            label = name_elem.text
             difficult = "0"
             if obj.find("difficult") is not None:
                 difficult = str(obj.find("difficult").text)
@@ -1221,6 +1237,8 @@ class LabelConverter:
                         )
                         points = rectangle_from_diagonal(points)
 
+                    if label not in self.classes:
+                        continue
                     class_index = self.classes.index(label)
 
                     x_center = (points[0][0] + points[2][0]) / (
@@ -1245,6 +1263,8 @@ class LabelConverter:
                         )
                     )
                     if len(points) < 3:
+                        continue
+                    if label not in self.classes:
                         continue
                     class_index = self.classes.index(label)
                     norm_points = points / image_size
@@ -1280,6 +1300,8 @@ class LabelConverter:
                         for i in range(8)
                     ]
                     x0, y0, x1, y1, x2, y2, x3, y3 = normalized_coords
+                    if label not in self.classes:
+                        continue
                     class_index = self.classes.index(label)
                     f.write(
                         f"{class_index} {x0} {y0} {x1} {y1} {x2} {y2} {x3} {y3}\n"
@@ -1578,6 +1600,8 @@ class LabelConverter:
                     height = y_max - y_min
                     bbox = [x_min, y_min, width, height]
                     area = width * height
+                    if label not in self.classes:
+                        continue
                     class_id = self.classes.index(label)
 
                     annotation = {
@@ -1619,6 +1643,8 @@ class LabelConverter:
                 for data in pose_data.values():
                     points = data["rectangle"]
                     box_label = data["box_label"]
+                    if box_label not in self.classes:
+                        continue
                     class_id = self.classes.index(box_label)
                     if len(points) == 2:
                         logger.warning(
@@ -1858,7 +1884,9 @@ class LabelConverter:
             for shape in data["shapes"]:
                 if shape["shape_type"] != "rectangle":
                     continue
-                diccicult = shape.get("diccicult", False)
+                difficult = shape.get("difficult", False)
+                if shape["label"] not in self.classes:
+                    continue
                 class_id = int(self.classes.index(shape["label"]))
                 track_id = int(shape["group_id"]) if shape["group_id"] else -1
                 points = self.clamp_points(
@@ -1884,7 +1912,7 @@ class LabelConverter:
                     ymin,
                     boxw,
                     boxh,
-                    int(not diccicult),
+                    int(not difficult),
                     class_id,
                     1,
                 ]
@@ -1958,6 +1986,8 @@ class LabelConverter:
 
             for shape in data["shapes"]:
                 if shape["shape_type"] != "polygon":
+                    continue
+                if shape["label"] not in self.classes:
                     continue
                 class_id = int(self.classes.index(shape["label"]))
                 track_id = int(shape["group_id"]) if shape["group_id"] else -1

@@ -23,18 +23,18 @@ If you are already using Miniconda, follow these steps:
 
 **Step 0.** Download and install Miniconda from the [official website](https://docs.anaconda.com/miniconda/).
 
-**Step 1.** Create a conda environment with Python 3.10 ~ 3.13 (Python 3.12 is recommended) and activate it.
+**Step 1.** Create a conda environment with Python 3.11 ~ 3.13 (Python 3.12 is recommended) and activate it.
 
 > [!NOTE]
 > Other Python versions require compatibility verification on your own.
 
 ```bash
 # CPU Environment [Windows/Linux/macOS]
-conda create --name x-anylabeling-cpu python=3.10 -y
+conda create --name x-anylabeling-cpu python=3.12 -y
 conda activate x-anylabeling-cpu
 
 # CUDA 11.x Environment [Windows/Linux]
-conda create --name x-anylabeling-cu11 python=3.11 -y
+conda create --name x-anylabeling-cu11 python=3.12 -y
 conda activate x-anylabeling-cu11
 
 # CUDA 12.x Environment [Windows/Linux]
@@ -48,7 +48,7 @@ You can also use Python's built-in `venv` module to create virtual environments:
 
 ```bash
 # CPU [Windows/Linux/macOS]
-python3.10 -m venv venv-cpu
+python3.12 -m venv venv-cpu
 source venv-cpu/bin/activate  # Linux/macOS
 # venv-cpu\Scripts\activate    # Windows
 
@@ -58,7 +58,7 @@ source venv-cu12/bin/activate  # Linux
 # venv-cu12\Scripts\activate    # Windows
 
 # CUDA 11.x [Windows/Linux]
-python3.11 -m venv venv-cu11
+python3.12 -m venv venv-cu11
 source venv-cu11/bin/activate  # Linux
 # venv-cu11\Scripts\activate    # Windows
 ```
@@ -79,7 +79,7 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 ```bash
 # CPU Environment [Windows/Linux/macOS]
-uv venv --python 3.10 .venv-cpu
+uv venv --python 3.12 .venv-cpu
 source .venv-cpu/bin/activate      # Linux/macOS/WSL2
 # .venv-cpu\Scripts\activate       # Windows
 
@@ -89,28 +89,28 @@ source .venv-cu12/bin/activate     # Linux
 # .venv-cu12\Scripts\activate      # Windows
 
 # CUDA 11.x Environment [Windows/Linux]
-uv venv --python 3.11 .venv-cu11
+uv venv --python 3.12 .venv-cu11
 source .venv-cu11/bin/activate     # Linux
 # .venv-cu11\Scripts\activate      # Windows
 ```
 
 ### 1.2 Installation
 
-#### 1.2.1 Pip Installation (Stable Version)
+#### 1.2.1 Pip Installation (Beta Pre-release)
 
-You can easily install the latest stable version of X-AnyLabeling with the following commands (using `uv pip` is recommended):
+You can easily install the latest beta pre-release version of X-AnyLabeling with the following commands (using `uv pip` is recommended):
 
 ```bash
 pip install -U uv
 
 # CPU [Windows/Linux/macOS]
-uv pip install x-anylabeling-cvhub[cpu]
+uv pip install --pre "x-anylabeling-cvhub[cpu]"
 
 # CUDA 12.x is the default GPU option [Windows/Linux]
-uv pip install x-anylabeling-cvhub[gpu]
+uv pip install --pre "x-anylabeling-cvhub[gpu]"
 
 # CUDA 11.x [Windows/Linux]
-uv pip install x-anylabeling-cvhub[gpu-cu11]
+uv pip install --pre "x-anylabeling-cvhub[gpu-cu11]"
 ```
 
 #### 1.2.2 Git Clone (Recommended)
@@ -130,20 +130,23 @@ After cloning the repository, you can choose to install the dependencies in eith
 pip install -U uv
 
 # CPU [Windows/Linux/macOS]
-uv pip install -e .[cpu]
+uv pip install -e ".[cpu]"
 
 # CUDA 12.x is the default GPU option [Windows/Linux]
-uv pip install -e .[gpu]
+uv pip install -e ".[gpu]"
 
 # CUDA 11.x [Windows/Linux]
-uv pip install -e .[gpu-cu11]
+uv pip install -e ".[gpu-cu11]"
 ```
 
 If you need to perform secondary development or package compilation, you can install the `dev` dependencies simultaneously, for example:
 
 ```bash
-uv pip install -e .[cpu,dev]
+uv pip install -e ".[cpu,dev]"
 ```
+
+> [!NOTE]
+> If you switch to a new project directory, rerun the install command there, otherwise the environment will reference the source code from the previous directory.
 
 After installation, you can verify it by running the following command:
 
@@ -177,6 +180,7 @@ xanylabeling
 | `--output`, `-O`, `-o`     | Specify the output file or directory. Paths ending with `.json` are treated as files.                         |
 | `--config`                 | Specify a configuration file or YAML-formatted configuration string. Defaults to a user-specific path.        |
 | `--work-dir`               | Specify the working directory for configuration and data files. Defaults to home directory.                   |
+| `--qt-image-allocation-limit` | Override the Qt image allocation limit in MB. Qt default is `256 MB`. Use `0` to disable the limit.     |
 | `--nodata`                 | Prevent storing image data in JSON files.                                                                     |
 | `--autosave`               | Enable automatic saving of annotation data.                                                                   |
 | `--nosortlabels`           | Disable label sorting.                                                                                        |
@@ -185,7 +189,6 @@ xanylabeling
 | `--labels`                 | Comma-separated list of labels or path to a file containing labels.                                           |
 | `--validatelabel`          | Specify the type of label validation.                                                                         |
 | `--keep-prev`              | Keep annotations from the previous frame.                                                                     |
-| `--epsilon`                | Determine the epsilon value for finding the nearest vertex on the canvas.                                     |
 | `--no-auto-update-check`   | Disable automatic update checks on startup.                                                                   |
 
 > [!NOTE]
@@ -210,11 +213,15 @@ xanylabeling convert <task>  # Show detailed help and examples for a specific ta
 > - `onnx >= 1.15.0, < 1.16.1`
 > - `onnxruntime-gpu >= 1.15.0, < 1.19.0`
 
-**Optional Step**: Generate Resource Files
+**Optional Step**: Refresh Translation and Resource Files
 
-After completing the necessary steps, you can generate resource files using the following command:
+If you update UI text or maintain localization files, refresh the translation artifacts for all supported interface languages (`en_US`, `zh_CN`, `ja_JP`, `ko_KR`) with:
 
 ```bash
+# Regenerate .ts catalogs from source strings
+python scripts/generate_languages.py
+
+# Compile .qm files and rebuild Qt resources
 python scripts/compile_languages.py
 ```
 

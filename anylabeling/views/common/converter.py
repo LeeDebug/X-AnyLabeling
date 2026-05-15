@@ -530,7 +530,6 @@ def run_conversion(
         )
 
         if "2xlabel" in task:
-
             if task == "yolo2xlabel":
                 if not images:
                     raise ValueError(
@@ -993,7 +992,6 @@ def run_conversion(
                 )
 
         elif "xlabel2" in task:
-
             if task == "xlabel2yolo":
                 if not images:
                     raise ValueError(
@@ -1463,6 +1461,14 @@ def run_conversion(
                 if mode == "rec":
                     crop_img_path = osp.join(output, "crop_img")
                     os.makedirs(crop_img_path, exist_ok=True)
+                    for fname in ("Label.txt", "rec_gt.txt"):
+                        fpath = osp.join(output, fname)
+                        if osp.exists(fpath):
+                            os.remove(fpath)
+                elif mode == "kie":
+                    ppocr_kie_file = osp.join(output, "ppocr_kie.json")
+                    if osp.exists(ppocr_kie_file):
+                        os.remove(ppocr_kie_file)
 
                 print(
                     colored(

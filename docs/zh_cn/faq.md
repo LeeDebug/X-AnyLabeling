@@ -174,6 +174,39 @@ python -m anylabeling
 可参考[#823](https://github.com/CVHub520/X-AnyLabeling/issues/823)。
 </details>
 
+<details>
+<summary>Q: 打不开超大分辨率图片，或打开大图时提示内存限制？</summary>
+
+这通常不是图片文件本身体积过大，而是 Qt 在解码图片时命中了 `QImageReader` 的默认分配上限（默认约为 `256 MB`）。
+
+从当前版本开始，你可以按需手动调整这个限制：
+
+- 方式1：通过 GUI 设置
+  打开 `Settings`（`Ctrl+0`）> `General`，修改 `Qt Image Allocation Limit`
+- 方式2：通过配置文件
+  编辑用户目录下的 `.xanylabelingrc`，设置 `qt_image_allocation_limit`
+- 方式3：通过启动参数
+  使用 `--qt-image-allocation-limit`
+
+示例：
+
+```yaml
+qt_image_allocation_limit: 1024
+```
+
+```bash
+xanylabeling --qt-image-allocation-limit 1024
+```
+
+说明：
+
+- `null`：保留 Qt 默认限制
+- `0`：禁用该限制
+- 其他正整数：按 MB 指定新的上限，例如 `512`、`1024`
+
+修改该设置后需要重启应用才能生效。若机器内存较小，不建议直接设置为 `0`。
+</details>
+
 
 ### 模型相关问题
 
@@ -270,6 +303,16 @@ export https_proxy=http://ip:port
 </details>
 
 <details>
+<summary>Q: 使用 Chatbot 时报错 "Using SOCKS proxy, but the 'socksio' package is not installed"</summary>
+
+当系统环境变量中配置了 SOCKS 代理（如 `ALL_PROXY=socks5://...`）时，Chatbot 所依赖的 `httpx` 需要额外安装 `socksio` 才能支持 SOCKS 协议。手动安装即可解决：
+
+```bash
+pip install httpx[socks]
+```
+</details>
+
+<details>
 <summary>Q: ERROR | model_manager:predict_shapes:2031 - Error in predict_shapes: '<=' not supported between instances of 'int' and 'str'</summary>
 
 请检查模型配置文件（*.yaml）是否正确，具体可参考此[#902](https://github.com/CVHub520/X-AnyLabeling/issues/902)。
@@ -319,7 +362,12 @@ export https_proxy=http://ip:port
 <details>
 <summary>Q: 下载完的模型每次重新启动应用时都被自动删除重新下载</summary>
 
-- 注意模型路径不得有中文字符，否则会有异常。（[#600](https://github.com/CVHub520/X-AnyLabeling/issues/600)）
+当前程序的处理逻辑是：当检测到本地已有缓存模型时，会先进行完整性校验；若校验失败或文件为空，则删除本地缓存并重新下载；若下载在达到最大尝试次数后仍失败，则停止本次加载并直接报错。该行为不会在单次加载流程中无限循环。
+
+因此，如果是网络问题导致下载失败，可先检查当前网络环境，必要时配置代理，或尝试切换模型下载源（`GitHub` / `ModelScope`），相关说明可参考[用户手册](./user_guide.md#模型下载源-model-hub)；如果是模型加载异常，例如当前环境中的 `CUDA`、`cuDNN`、`ONNX`、`ONNX Runtime` 等版本不匹配，请参考[快速入门指南](./get_started.md)中的安装与兼容性说明重新检查环境。最后，如果本地环境仍难以排查或长期不稳定，可考虑基于 [X-AnyLabeling-Server](https://github.com/CVHub520/X-AnyLabeling-Server) 使用 Pytorch 原生框架进行远程推理部署。
+
+其它失败原因可参考：模型路径存在中文字符([#600](https://github.com/CVHub520/X-AnyLabeling/issues/600)).
+
 </details>
 
 <details>

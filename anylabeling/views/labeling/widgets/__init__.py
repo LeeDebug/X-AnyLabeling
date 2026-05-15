@@ -7,7 +7,6 @@ from .canvas import Canvas
 from .compare_view import CompareViewManager, CompareViewSlider
 from .chatbot_dialog import ChatbotDialog
 from .classifier_dialog import ClassifierDialog
-from .color_dialog import ColorDialog
 from .crosshair_settings_dialog import CrosshairSettingsDialog
 from .file_dialog_preview import FileDialogPreview
 from .filter_label_widget import GroupIDFilterComboBox, LabelFilterComboBox
@@ -24,6 +23,7 @@ from .model_dropdown_widget import SearchBar
 from .navigator_widget import NavigatorDialog
 from .overview_dialog import OverviewDialog
 from .polygon_sides_dialog import PolygonSidesDialog
+from .ppocr_dialog import PPOCRDialog
 from .popup import Popup
 from .toolbar import ToolBar
 from .unique_label_qlist_widget import UniqueLabelQListWidget

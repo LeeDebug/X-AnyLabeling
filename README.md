@@ -12,7 +12,7 @@
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-LGPL%20v3-blue.svg"></a>
     <a href=""><img src="https://img.shields.io/github/v/release/CVHub520/X-AnyLabeling?color=ffa"></a>
     <a href=""><img src="https://img.shields.io/pypi/v/x-anylabeling-cvhub?logo=pypi&logoColor=white"></a>
-    <a href=""><img src="https://img.shields.io/badge/python-3.10+-aff.svg"></a>
+    <a href=""><img src="https://img.shields.io/badge/python-3.11+-aff.svg"></a>
     <a href=""><img src="https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-pink.svg"></a>
     <a href=""><img src="https://img.shields.io/github/downloads/CVHub520/X-AnyLabeling/total?label=downloads"></a>
     <a href="https://modelscope.cn/collections/X-AnyLabeling-7b0e1798bcda43"><img src="https://img.shields.io/badge/modelscope-X--AnyLabeling-6750FF?link=https%3A%2F%2Fmodelscope.cn%2Fcollections%2FX-AnyLabeling-7b0e1798bcda43"></a>
@@ -20,7 +20,8 @@
 
 ![](https://user-images.githubusercontent.com/18329471/234640541-a6a65fbc-d7a5-4ec3-9b65-55305b01a7aa.png)
 
-<img src="https://github.com/user-attachments/assets/8b5f290a-dddf-410c-a004-21e5a7bcd1cc" width="100%" />
+<video src="https://github.com/user-attachments/assets/25957cae-4dbd-494c-9923-e959d985674e" width="100%" controls>
+</video>
 
 <details>
 <summary><strong>Auto-Training</strong></summary>
@@ -84,9 +85,14 @@
 
 ## 🥳 What's New
 
-<video src="https://github.com/user-attachments/assets/4a676ebf-d2ae-4327-b078-8e63a5323793" width="100%" controls>
-</video>
-
+- `2026-04-26`: Added client-side (local ONNX) support for [SAM 3](./examples/grounding/sam3/README.md) text-grounded segmentation.
+- `2026-04-25`: Added support for the [GeCo2](./examples/counting/geco2/README.md) object counting model.
+- `2026-04-19`: Added annotation check status workflow for reviewing labeled images.
+- `2026-04-19`: Added support for TensorRT backend inference for YOLO models.
+- `2026-04-18`: Added support exporting annotation visualizations as images or videos.
+- `2026-04-18`: Added support for [PaddleOCR](./docs/en/paddle_ocr.md) document parsing and intelligent text recognition annotation panel.
+- `2026-04-01`: Added support for Japanese and Korean UI languages (`ja_JP`, `ko_KR`).
+- `2026-03-22`: Added support for built-in Settings in the GUI for directly adjusting common options.
 - `2026-03-10`: Added support for 3D Cuboid shape annotation from rectangle.
 - `2026-03-01`: Completed the PyQt5-to-PyQt6 upgrade refactor (Beta release), along with additional feature fixes and optimizations.
 - For more details, please refer to the [CHANGELOG](./CHANGELOG.md)
@@ -94,8 +100,6 @@
 ## X-AnyLabeling
 
 **X-AnyLabeling** is a powerful annotation tool that integrates an AI engine for fast and automatic labeling. It's designed for multi-modal data engineers, offering industrial-grade solutions for complex tasks.
-
-<img src="https://github.com/user-attachments/assets/632e629b-0dec-407b-95a6-728052e1dd7b" width="100%" />
 
 Also, we highly recommend trying out [X-AnyLabeling-Server](https://github.com/CVHub520/X-AnyLabeling-Server), a simple, lightweight, and extensible framework that enables remote inference capabilities for X-AnyLabeling.
 
@@ -105,16 +109,15 @@ Also, we highly recommend trying out [X-AnyLabeling-Server](https://github.com/C
 
 - Supports remote inference service.
 - Processes both `images` and `videos`.
-- Accelerates inference with `GPU` and `FFmpeg` support.
+- Supports flexible backends including `ONNX Runtime`, `TensorRT`, and `OpenCV DNN`.
+- Supports UI localization in `English`, `Chinese`, `Japanese`, and `Korean`.
 - Allows custom models and secondary development.
 - Supports one-click inference for all images in the current task.
-- Supports import/export for formats like COCO, VOC, YOLO, DOTA, MOT, MASK, PPOCR, MMGD, VLM-R1.
-- Handles tasks like `classification`, `detection`, `segmentation`, `caption`, `rotation`, `tracking`, `estimation`, `ocr`, `vqa`, `grounding` and so on.
+- Supports import/export for formats like `COCO`, `VOC`, `YOLO`, `DOTA`, `MOT`, `MASK`, `PPOCR`, `MMGD`, `VLM-R1`, `ShareGPT`.
+- Handles tasks like `classification`, `detection`, `segmentation`, `caption`, `rotation`, `tracking`, `estimation`, `ocr`, `vqa`, `grounding`, `document parsing` and so on.
 - Supports diverse annotation styles: `polygons`, `rectangles`, `cuboids`, `rotated boxes`, `quadrilaterals`, `circles`, `lines`, `line strips`, `points`, and annotations for `text detection`, `recognition`, and `KIE`.
 
 ### Model library
-
-<img src="https://github.com/user-attachments/assets/7da2da2e-f182-4a1b-85f6-bfd0dfcc6a1b" width="100%" />
 
 | **Task Category** | **Supported Models** |
 | :--- | :--- |
@@ -129,11 +132,14 @@ Also, we highly recommend trying out [X-AnyLabeling-Server](https://github.com/C
 | ✂️ Image Matting | RMBG 1.4/2.0 |
 | 💡 Proposal | UPN |
 | 🏷️ Tagging | RAM, RAM++ |
-| 📄 OCR | PP-OCRv4, PP-OCRv5, PP-DocLayoutV3, PaddleOCR-VL-1.5 |
+| 📄 OCR | PP-OCRv4, PP-OCRv5 |
+| 🧾 Layout Analysis | PP-DocLayoutV3 |
+| 📑 Document Parsing | PaddleOCR-VL, PaddleOCR-VL-1.5 |
 | 🗣️ Vision Foundation Models | Rex-Omni, Florence2 |
 | 👁️ Vision Language Models | Qwen3-VL, Gemini, ChatGPT, GLM |
 | 🛣️ Lane Detection | CLRNet |
-| 📍 Grounding | CountGD, GeCO, Grounding DINO, YOLO-World, YOLOE |
+| 🔢 Object Counting | CountGD, GeCO, GeCo2 |
+| 📍 Grounding | Grounding DINO, YOLO-World, YOLOE |
 | 📚 Other | 👉 [model_zoo](./docs/en/model_zoo.md) 👈 |
 
 ## Docs
@@ -146,8 +152,7 @@ Also, we highly recommend trying out [X-AnyLabeling-Server](https://github.com/C
 5. [Chatbot](./docs/en/chatbot.md)
 6. [VQA](./docs/en/vqa.md)
 7. [Multi-class Image Classifier](./docs/en/image_classifier.md)
-
-<img src="https://github.com/user-attachments/assets/0d67311c-f441-44b6-9ee0-932f25f51b1c" width="100%" />
+8. [Document Parsing and Intelligent Text Recognition](./docs/en/paddle_ocr.md)
 
 ## Examples
 
@@ -185,6 +190,7 @@ Also, we highly recommend trying out [X-AnyLabeling-Server](https://github.com/C
   - [Florence 2](./examples/vision_language/florence2/README.md)
 - [Counting](./examples/counting/)
   - [GeCo](./examples/counting/geco/README.md)
+  - [GeCo2](./examples/counting/geco2/README.md)
 - [Grounding](./examples/grounding/)
   - [YOLOE](./examples/grounding/yoloe/README.md)
   - [SAM 3](./examples/grounding/sam3/README.md)

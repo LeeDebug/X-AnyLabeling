@@ -90,6 +90,7 @@ class LabelFile:
             data["imagePath"] = osp.basename(data["imagePath"])
             if data["imageData"] is not None:
                 image_data = base64.b64decode(data["imageData"])
+                image_data_b64 = data["imageData"]
             else:
                 # relative path from label file to relative path from cwd
                 if self.image_dir:
@@ -99,12 +100,13 @@ class LabelFile:
                         osp.dirname(filename), data["imagePath"]
                     )
                 image_data = self.load_image_file(image_path)
+                image_data_b64 = base64.b64encode(image_data).decode("utf-8")
 
             flags = data.get("flags", {})
             image_path = data["imagePath"]
 
             self._check_image_height_and_width(
-                base64.b64encode(image_data).decode("utf-8"),
+                image_data_b64,
                 data.get("imageHeight"),
                 data.get("imageWidth"),
             )
@@ -121,6 +123,7 @@ class LabelFile:
 
         # Add new fields if not available
         other_data["description"] = other_data.get("description", "")
+        other_data["checked"] = data.get("checked", False) is True
 
         # Only replace data after everything is loaded.
         self.flags = flags
@@ -151,6 +154,7 @@ class LabelFile:
             other_data = {}
         if flags is None:
             flags = {}
+        checked = other_data.get("checked", False) is True
         for i, shape in enumerate(shapes):
             if shape["shape_type"] == "rectangle":
                 sorted_box = LabelConverter.calculate_bounding_box(
@@ -167,6 +171,7 @@ class LabelFile:
 
         data = create_xlabel_template(
             flags=flags,
+            checked=checked,
             shapes=shapes,
             image_path=image_path,
             image_data=image_data,
@@ -175,6 +180,8 @@ class LabelFile:
         )
 
         for key, value in other_data.items():
+            if key == "checked":
+                continue
             assert key not in data
             data[key] = value
         try:

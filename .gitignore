@@ -162,6 +162,7 @@ weights/
 *.weights
 *.pt
 *.ts
+!anylabeling/resources/translations/*.ts
 *.pb
 *.onnx
 *.engine
@@ -181,4 +182,4 @@ pnnx*
 *.rknn
 
 # calibration image
-calibration_*.npy!packaging/pyinstaller/specs/*.spec
+calibration_*.npy

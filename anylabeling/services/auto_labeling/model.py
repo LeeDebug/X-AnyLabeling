@@ -9,10 +9,6 @@ from urllib.error import URLError
 
 import ssl
 
-ssl._create_default_https_context = (
-    ssl._create_unverified_context
-)  # Prevent issue when downloading models behind a proxy
-
 import socket
 
 socket.setdefaulttimeout(240)  # Prevent timeout when downloading models
@@ -20,12 +16,11 @@ socket.setdefaulttimeout(240)  # Prevent timeout when downloading models
 from abc import abstractmethod
 
 from PyQt6.QtCore import QCoreApplication, QFile, QObject
-from PyQt6.QtGui import QImage
-
 from .types import AutoLabelingResult, DownloadCancelledError
 from anylabeling.config import get_config, get_work_directory
 from anylabeling.views.labeling.logger import logger
 from anylabeling.views.labeling.label_file import LabelFile, LabelFileError
+from anylabeling.views.labeling import utils
 
 
 def _check_model_worker(model_path):
@@ -171,8 +166,9 @@ class Model(QObject):
                 self._check_cancelled()
 
                 req = urllib.request.Request(url)
+                ssl_context = ssl._create_unverified_context()
                 response = urllib.request.urlopen(
-                    req, timeout=self.DOWNLOAD_TIMEOUT
+                    req, timeout=self.DOWNLOAD_TIMEOUT, context=ssl_context
                 )
                 total_size = int(response.headers.get("Content-Length", 0))
                 downloaded = 0
@@ -364,7 +360,9 @@ class Model(QObject):
             )
             self.on_message("Download failed! Please try again later.")
             time.sleep(1)
-            return None
+            raise Exception(
+                f"Could not download model: {ellipsis_download_url}"
+            ) from e
 
         return model_abs_path
 
@@ -403,7 +401,7 @@ class Model(QObject):
             image_data = label_file.image_data
         else:
             image_data = LabelFile.load_image_file(filename)
-        image = QImage.fromData(image_data)
+        image = utils.img_data_to_qimage(image_data, filename)
         if image.isNull():
             logger.error("Error reading {}".format(filename))
         return image

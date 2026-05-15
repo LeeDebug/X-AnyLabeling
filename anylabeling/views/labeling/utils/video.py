@@ -162,16 +162,14 @@ def extract_frames_from_video(self, input_file, out_dir):
             )
 
             try:
-                with open(input_file, "rb") as f:
-                    video_data = f.read()
                 _, ext = osp.splitext(input_file)
                 suffix = ext if ext else ".mp4"
                 temp_file = tempfile.NamedTemporaryFile(
                     suffix=suffix, delete=False
                 )
                 temp_video_path = temp_file.name
-                temp_file.write(video_data)
                 temp_file.close()
+                shutil.copy2(input_file, temp_video_path)
                 logger.debug(
                     f"Writing video data to temporary file: {temp_video_path}"
                 )
@@ -314,9 +312,10 @@ def extract_frames_from_video(self, input_file, out_dir):
                         QApplication.processEvents()
                         time.sleep(0.5)
 
-                        stdout, stderr = (
-                            process.communicate()
-                        )  # Get final output
+                        (
+                            stdout,
+                            stderr,
+                        ) = process.communicate()  # Get final output
                         if process.returncode != 0:
                             logger.error(
                                 f"ffmpeg failed with exit code {process.returncode}"
@@ -537,12 +536,12 @@ def open_video_file(self):
     if not self.may_continue():
         return
 
-    filter = "Video Files (*.asf *.avi *.m4v *.mkv *.mov *.mp4 *.mpeg *.mpg *.ts *.wmv);;All Files (*)"
+    file_filter = "Video Files (*.asf *.avi *.m4v *.mkv *.mov *.mp4 *.mpeg *.mpg *.ts *.wmv);;All Files (*)"
     input_file, _ = QFileDialog.getOpenFileName(
         self,
         self.tr("Open Video file"),
         "",
-        filter,
+        file_filter,
     )
 
     if not input_file or not osp.exists(input_file):
