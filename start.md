@@ -49,6 +49,20 @@ xanylabeling --output ./labels
 ```
 
 
+## 从源码安装（开发者模式）
+
+```bash
+# 安装开发者模式依赖
+# CUDA 12.x
+uv pip install -e .[gpu]
+
+# CUDA 11.x
+# uv pip install -e .[gpu-cu11]
+
+# 启动程序
+python anylabeling/app.py
+```
+
 
 
 
